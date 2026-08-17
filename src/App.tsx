@@ -380,6 +380,43 @@ export default function App() {
     }
   };
 
+  // ✅ NUEVA FUNCIÓN: Eliminar barbero
+  const eliminarBarbero = async (id: number, nombreBarbero: string) => {
+    if (window.confirm(`¿Estás seguro de que deseas ELIMINAR PERMANENTEMENTE al barbero ${nombreBarbero}?\n\nEsta acción no se puede deshacer.`)) {
+      try {
+        const response = await fetch(`${API_URL}/barberos/${id}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (response.ok) {
+          setBarberosRegistrados(barberosRegistrados.filter(b => b.id !== id));
+          
+          if (barberoElegido.id === id) {
+            const otroActivo = barberosRegistrados.find(b => b.id !== id && b.activo !== false);
+            if (otroActivo) {
+              setBarberoElegido({
+                id: otroActivo.id,
+                nombre: otroActivo.nombre,
+                especialidad: otroActivo.especialidad || 'Barbero Profesional',
+                experiencia: otroActivo.experiencia || 'Experto',
+                foto: otroActivo.foto || ''
+              });
+            }
+          }
+          
+          alert(`✅ Barbero ${nombreBarbero} eliminado correctamente.`);
+        } else {
+          const error = await response.json();
+          alert(`❌ Error al eliminar: ${error.error || 'Error desconocido'}`);
+        }
+      } catch (err) {
+        console.error("Error al eliminar barbero:", err);
+        alert("❌ Hubo un error al eliminar el barbero.");
+      }
+    }
+  };
+
   const alternarBloqueoDia = (e: React.FormEvent) => {
     e.preventDefault();
     if (!fechaBloqueoInput || !usuarioLogueado) return;
@@ -528,8 +565,6 @@ export default function App() {
     ? citas 
     : citas.filter(c => c.barbero === usuarioLogueado?.nombre);
 
-  // El resto del código (el return con todo el JSX) permanece IGUAL
-  // Solo se modificaron las llamadas fetch
   return (
     <div className="min-h-screen bg-[#111111] text-[#F5F1E8] font-sans selection:bg-[#C9A227] selection:text-black">
       
@@ -1379,6 +1414,13 @@ export default function App() {
                               }`}
                             >
                               <Power size={13} /> {estaActivo ? 'Desactivar' : 'Activar'}
+                            </button>
+                            {/* ✅ NUEVO BOTÓN ELIMINAR */}
+                            <button 
+                              onClick={() => eliminarBarbero(b.id, b.nombre)}
+                              className="text-xs bg-red-950/60 border border-red-700 text-red-400 px-3 py-1.5 hover:bg-red-900 hover:text-red-200 transition font-medium uppercase tracking-wider inline-flex items-center gap-1.5"
+                            >
+                              <Trash2 size={13} /> Eliminar
                             </button>
                           </td>
                         </tr>
