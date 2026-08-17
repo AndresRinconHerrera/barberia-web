@@ -5,6 +5,9 @@ import {
   Instagram, Facebook, Award, Users, FileText, Lock, Mail, LogOut, UserPlus, Eye, EyeOff, Image, Upload, Trash2, Edit3, Ban, Power, ChevronLeft
 } from 'lucide-react';
 
+// ✅ CONFIGURACIÓN CORREGIDA: URL de Render
+const API_URL = 'https://barberia-backend-xqxx.onrender.com/api';
+
 type Servicio = { id: number; nombre: string; descripcion: string; precio: number; duracion: string };
 type BarberoPerfil = { id: number; nombre: string; especialidad: string; experiencia: string; foto: string };
 type Cita = { id: number; usuario: string; telefono: string; barbero: string; servicio: string; fecha: string; hora: string; estado: 'Confirmada' | 'Pendiente' | 'Cancelada' };
@@ -46,7 +49,6 @@ export default function App() {
   const [errorHorario, setErrorHorario] = useState('');
   const [barberoSeleccionadoHorario, setBarberoSeleccionadoHorario] = useState('');
 
-  // 1. Ajuste del useState para que comience vacío[cite: 1]
   const [barberosRegistrados, setBarberosRegistrados] = useState<UsuarioSistema[]>([]);
 
   const [modoEdicionId, setModoEdicionId] = useState<number | null>(null);
@@ -79,14 +81,13 @@ export default function App() {
 
   const [fechaActualCalendario, setFechaActualCalendario] = useState(new Date());
 
-  // 2. useEffect para conectar con el endpoint /api/barberos[cite: 1]
+  // ✅ CORREGIDO: Cargar barberos desde la URL de Render
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/barberos`)
+    fetch(`${API_URL}/barberos`)
       .then(res => res.json())
       .then(data => {
         setBarberosRegistrados(data);
         if (data.length > 0) {
-          // Seleccionar el primer barbero por defecto si existe
           setBarberoElegido({
             id: data[0].id,
             nombre: data[0].nombre,
@@ -116,8 +117,9 @@ export default function App() {
     return `${dia} de ${nombreMes} de ${anio}`;
   };
 
+  // ✅ CORREGIDO: Cargar citas desde la URL de Render
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/citas`)
+    fetch(`${API_URL}/citas`)
       .then(res => res.json())
       .then(data => setCitas(data))
       .catch(err => console.error("Error al cargar citas:", err));
@@ -130,12 +132,13 @@ export default function App() {
     return diasBloqueados.some(d => d.barbero === nombreBarb && d.fecha === fecha);
   };
 
+  // ✅ CORREGIDO: Consultar horas ocupadas desde la URL de Render
   useEffect(() => {
     if (!fechaCita || !barberoElegido) {
       setHorasOcupadas([]);
       return;
     }
-    fetch(`${import.meta.env.VITE_API_URL}/citas-ocupadas?barbero=${encodeURIComponent(barberoElegido.nombre)}&fecha=${fechaCita}`)
+    fetch(`${API_URL}/citas-ocupadas?barbero=${encodeURIComponent(barberoElegido.nombre)}&fecha=${fechaCita}`)
       .then(res => res.json())
       .then(data => {
         setHorasOcupadas(data);
@@ -223,7 +226,7 @@ export default function App() {
     }
   };
 
-  // 3. Revisión de la función de creación de barberos para enviar datos al servidor (POST / PUT)[cite: 1]
+  // ✅ CORREGIDO: Guardar o actualizar barbero usando la URL de Render
   const guardarOActualizarBarbero = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nuevoBarberoNombre || !nuevoBarberoEmail || !nuevoBarberoTel || !nuevoBarberoExperiencia) return;
@@ -248,7 +251,7 @@ export default function App() {
           activo: barberoActual?.activo ?? true
         };
 
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/barberos/${modoEdicionId}`, {
+        const response = await fetch(`${API_URL}/barberos/${modoEdicionId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(datosActualizados)
@@ -288,7 +291,7 @@ export default function App() {
           activo: true
         };
 
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/barberos`, {
+        const response = await fetch(`${API_URL}/barberos`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(nuevoBarberoData)
@@ -337,13 +340,14 @@ export default function App() {
     setNuevoBarberoPass('');
   };
 
+  // ✅ CORREGIDO: Alternar estado del barbero usando la URL de Render
   const alternarEstadoBarbero = async (id: number, nombreBarbero: string, estadoActual?: boolean) => {
     const nuevoEstado = estadoActual === false ? true : false;
     const accionTexto = nuevoEstado ? 'activar' : 'desactivar';
     
     if (window.confirm(`¿Estás seguro de que deseas ${accionTexto} al barbero ${nombreBarbero}?`)) {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/barberos/${id}`, {
+        const response = await fetch(`${API_URL}/barberos/${id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ activo: nuevoEstado })
@@ -434,6 +438,7 @@ export default function App() {
     });
   };
 
+  // ✅ CORREGIDO: Confirmar reserva usando la URL de Render
   const confirmarReserva = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorTelefonoCliente('');
@@ -452,7 +457,7 @@ export default function App() {
     if (!nombreCliente || !fechaCita) return;
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/citas`, {
+      const response = await fetch(`${API_URL}/citas`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -484,9 +489,10 @@ export default function App() {
     }
   };
 
+  // ✅ CORREGIDO: Actualizar estado de cita usando la URL de Render
   const actualizarEstadoCita = async (id: number, nuevoEstado: 'Confirmada' | 'Pendiente' | 'Cancelada') => {
     try {
-      await fetch(`${import.meta.env.VITE_API_URL}/citas/${id}`, {
+      await fetch(`${API_URL}/citas/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ estado: nuevoEstado })
@@ -522,6 +528,8 @@ export default function App() {
     ? citas 
     : citas.filter(c => c.barbero === usuarioLogueado?.nombre);
 
+  // El resto del código (el return con todo el JSX) permanece IGUAL
+  // Solo se modificaron las llamadas fetch
   return (
     <div className="min-h-screen bg-[#111111] text-[#F5F1E8] font-sans selection:bg-[#C9A227] selection:text-black">
       
@@ -1444,7 +1452,7 @@ export default function App() {
 
         </main>
       )}
-  
+
     </div>
   );
-} 
+}
