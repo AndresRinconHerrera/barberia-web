@@ -5,7 +5,7 @@ import {
   Instagram, Facebook, Award, Users, FileText, Lock, Mail, LogOut, UserPlus, Eye, EyeOff, Image, Upload, Trash2, Edit3, Ban, Power, ChevronLeft
 } from 'lucide-react';
 
-// ✅ CONFIGURACIÓN CORREGIDA: URL de Render
+// Configuración de API
 const API_URL = 'https://barberia-backend-xqxx.onrender.com/api';
 
 type Servicio = { id: number; nombre: string; descripcion: string; precio: number; duracion: string };
@@ -60,11 +60,8 @@ export default function App() {
   const [nuevoBarberoFoto, setNuevoBarberoFoto] = useState('');
   const [nuevoBarberoPass, setNuevoBarberoPass] = useState('');
 
-  // ✅ NUEVOS ESTADOS PARA TÉRMINOS Y COOKIES
   const [cookiesAceptadas, setCookiesAceptadas] = useState(false);
   const [terminosAceptados, setTerminosAceptados] = useState(false);
-  const [mostrarTerminos, setMostrarTerminos] = useState(false);
-  const [terminosCheck, setTerminosCheck] = useState(false);
 
   const barberosActivos = barberosRegistrados.filter(b => b.activo !== false);
 
@@ -87,7 +84,6 @@ export default function App() {
 
   const [fechaActualCalendario, setFechaActualCalendario] = useState(new Date());
 
-  // ✅ VERIFICAR COOKIES AL CARGAR
   useEffect(() => {
     const cookies = localStorage.getItem('cookiesAceptadas');
     if (cookies === 'true') {
@@ -95,7 +91,6 @@ export default function App() {
     }
   }, []);
 
-  // ✅ CORREGIDO: Cargar barberos desde la URL de Render
   useEffect(() => {
     fetch(`${API_URL}/barberos`)
       .then(res => res.json())
@@ -131,7 +126,6 @@ export default function App() {
     return `${dia} de ${nombreMes} de ${anio}`;
   };
 
-  // ✅ CORREGIDO: Cargar citas desde la URL de Render
   useEffect(() => {
     fetch(`${API_URL}/citas`)
       .then(res => res.json())
@@ -146,7 +140,6 @@ export default function App() {
     return diasBloqueados.some(d => d.barbero === nombreBarb && d.fecha === fecha);
   };
 
-  // ✅ CORREGIDO: Consultar horas ocupadas desde la URL de Render
   useEffect(() => {
     if (!fechaCita || !barberoElegido) {
       setHorasOcupadas([]);
@@ -240,20 +233,11 @@ export default function App() {
     }
   };
 
-  // ✅ FUNCIÓN PARA ACEPTAR COOKIES
   const aceptarCookies = () => {
     localStorage.setItem('cookiesAceptadas', 'true');
     setCookiesAceptadas(true);
   };
 
-  // ✅ FUNCIÓN PARA ACEPTAR TÉRMINOS
-  const aceptarTerminos = () => {
-    setTerminosAceptados(true);
-    setMostrarTerminos(false);
-    setTerminosCheck(true);
-  };
-
-  // ✅ CORREGIDO: Guardar o actualizar barbero usando la URL de Render
   const guardarOActualizarBarbero = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nuevoBarberoNombre || !nuevoBarberoEmail || !nuevoBarberoTel || !nuevoBarberoExperiencia) return;
@@ -298,7 +282,7 @@ export default function App() {
             });
           }
           setModoEdicionId(null);
-          alert('¡Información del barbero actualizada exitosamente!');
+          alert('Información del barbero actualizada exitosamente.');
         }
       } else {
         if (!nuevoBarberoPass) {
@@ -327,7 +311,7 @@ export default function App() {
         if (response.ok) {
           const barberoCreado = await response.json();
           setBarberosRegistrados([...barberosRegistrados, barberoCreado]);
-          alert('¡Cuenta de barbero creada exitosamente!');
+          alert('Cuenta de barbero creada exitosamente.');
         }
       }
 
@@ -367,7 +351,6 @@ export default function App() {
     setNuevoBarberoPass('');
   };
 
-  // ✅ CORREGIDO: Alternar estado del barbero usando la URL de Render
   const alternarEstadoBarbero = async (id: number, nombreBarbero: string, estadoActual?: boolean) => {
     const nuevoEstado = estadoActual === false ? true : false;
     const accionTexto = nuevoEstado ? 'activar' : 'desactivar';
@@ -407,9 +390,8 @@ export default function App() {
     }
   };
 
-  // ✅ NUEVA FUNCIÓN: Eliminar barbero
   const eliminarBarbero = async (id: number, nombreBarbero: string) => {
-    if (window.confirm(`¿Estás seguro de que deseas ELIMINAR PERMANENTEMENTE al barbero ${nombreBarbero}?\n\nEsta acción no se puede deshacer.`)) {
+    if (window.confirm(`¿Estás seguro de que deseas eliminar permanentemente al barbero ${nombreBarbero}?\n\nEsta acción no se puede deshacer.`)) {
       try {
         const response = await fetch(`${API_URL}/barberos/${id}`, {
           method: 'DELETE',
@@ -432,14 +414,14 @@ export default function App() {
             }
           }
           
-          alert(`✅ Barbero ${nombreBarbero} eliminado correctamente.`);
+          alert(`Barbero ${nombreBarbero} eliminado correctamente.`);
         } else {
           const error = await response.json();
-          alert(`❌ Error al eliminar: ${error.error || 'Error desconocido'}`);
+          alert(`Error al eliminar: ${error.error || 'Error desconocido'}`);
         }
       } catch (err) {
         console.error("Error al eliminar barbero:", err);
-        alert("❌ Hubo un error al eliminar el barbero.");
+        alert("Hubo un error al eliminar el barbero.");
       }
     }
   };
@@ -457,7 +439,7 @@ export default function App() {
       alert(`Día ${formatearFechaLegible(fechaBloqueoInput)} habilitado nuevamente para ${barberoNombre}.`);
     } else {
       setDiasBloqueados([...diasBloqueados, { barbero: barberoNombre, fecha: fechaBloqueoInput }]);
-      alert(`Día ${formatearFechaLegible(fechaBloqueoInput)} marcado como No Disponible para ${barberoNombre}.`);
+      alert(`Día ${formatearFechaLegible(fechaBloqueoInput)} marcado como no disponible para ${barberoNombre}.`);
     }
     setFechaBloqueoInput('');
   };
@@ -502,13 +484,11 @@ export default function App() {
     });
   };
 
-  // ✅ CORREGIDO: Confirmar reserva usando la URL de Render
   const confirmarReserva = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorTelefonoCliente('');
 
-    // ✅ VALIDAR QUE ACEPTÓ TÉRMINOS
-    if (!terminosCheck) {
+    if (!terminosAceptados) {
       alert('Debes aceptar los Términos y Condiciones para continuar con la reserva.');
       return;
     }
@@ -543,7 +523,6 @@ export default function App() {
 
       const nuevaCitaGuardada = await response.json();
       
-      // ✅ CORREGIDO: Crear objeto con TODOS los campos
       const citaConDetalles: Cita = {
         id: nuevaCitaGuardada.id || Date.now(),
         usuario: nombreCliente,
@@ -555,7 +534,6 @@ export default function App() {
         estado: 'Confirmada'
       };
 
-      // ✅ CORREGIDO: Actualizar estado correctamente
       setCitas(prevCitas => [citaConDetalles, ...prevCitas]);
       setReservaConfirmada(citaConDetalles);
       setNombreCliente('');
@@ -567,7 +545,6 @@ export default function App() {
     }
   };
 
-  // ✅ CORREGIDO: Actualizar estado de cita usando la URL de Render
   const actualizarEstadoCita = async (id: number, nuevoEstado: 'Confirmada' | 'Pendiente' | 'Cancelada') => {
     try {
       await fetch(`${API_URL}/citas/${id}`, {
@@ -582,14 +559,14 @@ export default function App() {
           
           if (nuevoEstado === 'Cancelada') {
             const telefonoLimpio = citaActualizada.telefono ? citaActualizada.telefono.replace(/\D/g, '') : '';
-            const mensaje = `Hola *${citaActualizada.usuario || 'Cliente'}*, te saludamos de *MONARCH BARBER*. Lamentamos informarte que tu cita con el barbero *${citaActualizada.barbero}* para el dia *${formatearFechaLegible(citaActualizada.fecha)}* a las *${citaActualizada.hora}* ha sido *CANCELADA*. Si deseas reagendar, puedes contactarnos. ¡Gracias!`;
+            const mensaje = `Hola ${citaActualizada.usuario || 'Cliente'}, te saludamos de MONARCH BARBER. Lamentamos informarte que tu cita con el barbero ${citaActualizada.barbero} para el dia ${formatearFechaLegible(citaActualizada.fecha)} a las ${citaActualizada.hora} ha sido cancelada. Si deseas reagendar, puedes contactarnos. Gracias.`;
             if (telefonoLimpio) {
               window.open(`https://wa.me/${telefonoLimpio}?text=${encodeURIComponent(mensaje)}`, '_blank');
             }
           } 
           else if (nuevoEstado === 'Confirmada') {
             const telefonoLimpio = citaActualizada.telefono ? citaActualizada.telefono.replace(/\D/g, '') : '';
-            const mensaje = `¡Hola ${citaActualizada.usuario || 'Cliente'}! ✂️ Tu cita en *MONARCH BARBER* con el barbero *${citaActualizada.barbero}* para el dia *${formatearFechaLegible(citaActualizada.fecha)}* a las *${citaActualizada.hora}* ha sido *CONFIRMADA*. ¡Te esperamos!`;
+            const mensaje = `Hola ${citaActualizada.usuario || 'Cliente'}. Tu cita en MONARCH BARBER con el barbero ${citaActualizada.barbero} para el dia ${formatearFechaLegible(citaActualizada.fecha)} a las ${citaActualizada.hora} ha sido confirmada. Te esperamos.`;
             window.open(`https://wa.me/${telefonoLimpio}?text=${encodeURIComponent(mensaje)}`, '_blank');
           }
           
@@ -609,20 +586,13 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#111111] text-[#F5F1E8] font-sans selection:bg-[#C9A227] selection:text-black">
       
-      {/* ✅ BANNER DE COOKIES */}
+      {/* Banner de cookies */}
       {!cookiesAceptadas && (
         <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#1A1A1A] border-t border-[#C9A227] p-4 md:p-6 shadow-2xl">
           <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-xs text-[#A7A39A] text-center md:text-left">
-              🍪 Usamos cookies para mejorar tu experiencia en nuestra página web. 
-              Al continuar navegando, aceptas nuestra{' '}
-              <button 
-                onClick={() => setMostrarTerminos(true)}
-                className="text-[#C9A227] hover:underline font-medium"
-              >
-                Política de Cookies
-              </button>
-              .
+              Este sitio utiliza cookies para mejorar tu experiencia de navegación. 
+              Al continuar, aceptas nuestra política de cookies.
             </p>
             <div className="flex gap-3">
               <button 
@@ -630,93 +600,6 @@ export default function App() {
                 className="bg-[#C9A227] text-black px-6 py-2 uppercase text-[10px] tracking-[0.2em] font-semibold hover:bg-[#E0C36E] transition whitespace-nowrap"
               >
                 Aceptar Cookies
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ✅ MODAL DE TÉRMINOS Y CONDICIONES */}
-      {mostrarTerminos && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-[#1A1A1A] border border-[#C9A227] max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-2xl">
-            <div className="flex justify-between items-start mb-6">
-              <h2 className="text-2xl font-serif text-[#F5F1E8]">Términos y Condiciones</h2>
-              <button 
-                onClick={() => setMostrarTerminos(false)}
-                className="text-[#A7A39A] hover:text-[#C9A227] transition"
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            <div className="space-y-4 text-sm text-[#A7A39A] leading-relaxed">
-              <p className="text-[#F5F1E8] font-semibold">1. Aceptación de Términos</p>
-              <p>Al utilizar nuestros servicios, aceptas los presentes Términos y Condiciones.</p>
-
-              <p className="text-[#F5F1E8] font-semibold">2. Protección de Datos Personales (Ley 1581 de 2012 - Colombia)</p>
-              <p>
-                Monarch Barber se compromete a proteger tus datos personales de acuerdo con la 
-                <span className="text-[#C9A227]"> Ley 1581 de 2012</span> y el Decreto 1377 de 2013.
-              </p>
-              <ul className="list-disc list-inside space-y-2 pl-4">
-                <li>Tus datos serán utilizados exclusivamente para la gestión de citas y comunicación relacionada con nuestros servicios.</li>
-                <li>Tienes derecho a conocer, actualizar, rectificar y eliminar tus datos en cualquier momento.</li>
-                <li>No compartiremos tus datos con terceros sin tu consentimiento expreso.</li>
-                <li>Puedes ejercer tus derechos enviando un correo a: <span className="text-[#C9A227]">datos@monarchbarber.com</span></li>
-              </ul>
-
-              <p className="text-[#F5F1E8] font-semibold">3. Responsabilidad del Usuario</p>
-              <p>
-                Eres responsable de proporcionar información veraz y actualizada. 
-                La información falsa puede resultar en la cancelación de tu cita.
-              </p>
-
-              <p className="text-[#F5F1E8] font-semibold">4. Cancelaciones y Reagendamientos</p>
-              <p>
-                Las citas pueden cancelarse hasta 24 horas antes de la hora programada 
-                sin costo adicional. Cancelaciones tardías pueden incurrir en cargos.
-              </p>
-
-              <p className="text-[#F5F1E8] font-semibold">5. Modificaciones</p>
-              <p>
-                Nos reservamos el derecho de modificar estos términos. 
-                Las actualizaciones serán notificadas en nuestra página web.
-              </p>
-
-              <div className="pt-4 border-t border-[#2A2A2A]">
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input 
-                    type="checkbox" 
-                    checked={terminosAceptados}
-                    onChange={(e) => setTerminosAceptados(e.target.checked)}
-                    className="mt-1 accent-[#C9A227] w-4 h-4"
-                  />
-                  <span className="text-xs text-[#A7A39A]">
-                    He leído y acepto los <strong className="text-[#F5F1E8]">Términos y Condiciones</strong> 
-                    y la <strong className="text-[#F5F1E8]">Política de Protección de Datos</strong>.
-                  </span>
-                </label>
-              </div>
-            </div>
-
-            <div className="flex gap-4 mt-6 pt-4 border-t border-[#2A2A2A]">
-              <button 
-                onClick={() => setMostrarTerminos(false)}
-                className="flex-1 border border-[#2A2A2A] text-[#A7A39A] py-3 uppercase text-[10px] tracking-[0.2em] font-medium hover:border-[#C9A227] transition"
-              >
-                Cerrar
-              </button>
-              <button 
-                onClick={aceptarTerminos}
-                disabled={!terminosAceptados}
-                className={`flex-1 py-3 uppercase text-[10px] tracking-[0.2em] font-semibold transition ${
-                  terminosAceptados 
-                    ? 'bg-[#C9A227] text-black hover:bg-[#E0C36E]' 
-                    : 'bg-[#2A2A2A] text-[#555] cursor-not-allowed'
-                }`}
-              >
-                Aceptar Términos
               </button>
             </div>
           </div>
@@ -962,7 +845,7 @@ export default function App() {
                   <div className="w-16 h-16 bg-[#C9A227]/10 border border-[#C9A227] rounded-full flex items-center justify-center mx-auto text-[#C9A227]">
                     <Clock size={32} />
                   </div>
-                  <h3 className="text-3xl font-normal font-serif text-[#F5F1E8]">¡Cita agendada con éxito!</h3>
+                  <h3 className="text-3xl font-normal font-serif text-[#F5F1E8]">Cita agendada con éxito</h3>
                   <p className="text-sm text-[#A7A39A]">Tu reserva ha sido confirmada automáticamente para el barbero <strong className="text-white">{reservaConfirmada.barbero}</strong>.</p>
                   
                   <div className="bg-[#1A1A1A] border border-[#2A2A2A] p-6 max-w-md mx-auto text-left space-y-3 text-sm text-[#A7A39A]">
@@ -1085,7 +968,7 @@ export default function App() {
                         </div>
 
                         {esDiaDelBarberoBloqueado(barberoElegido.nombre, fechaCita) && (
-                          <p className="text-red-400 text-xs mt-2 uppercase tracking-wider font-semibold">⚠️ Este barbero no labora el día seleccionado.</p>
+                          <p className="text-red-400 text-xs mt-2 uppercase tracking-wider font-semibold">Este barbero no labora el día seleccionado.</p>
                         )}
                       </div>
 
@@ -1161,42 +1044,38 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* ✅ CHECKBOX DE TÉRMINOS Y CONDICIONES */}
-                    <div className="pt-4 border-t border-[#2A2A2A]">
+                    {/* Términos y condiciones integrados directamente */}
+                    <div className="pt-4 border-t border-[#2A2A2A] space-y-4">
+                      <div className="bg-[#0D0D0D] border border-[#C9A227]/20 p-4 rounded-sm">
+                        <p className="text-[10px] text-[#A7A39A] leading-relaxed">
+                          <span className="text-[#C9A227] font-semibold uppercase tracking-wider">Aviso de Privacidad:</span>
+                          {' '}De acuerdo con la Ley 1581 de 2012 y el Decreto 1377 de 2013, tus datos personales serán tratados únicamente para la gestión de citas y comunicación relacionada con los servicios de Monarch Barber. Tienes derecho a conocer, actualizar, rectificar y eliminar tus datos en cualquier momento enviando un correo a{' '}
+                          <span className="text-[#C9A227]">datos@monarchbarber.com</span>.
+                        </p>
+                      </div>
+
                       <label className="flex items-start gap-3 cursor-pointer">
                         <input 
                           type="checkbox" 
-                          checked={terminosCheck}
-                          onChange={(e) => setTerminosCheck(e.target.checked)}
-                          className="mt-1 accent-[#C9A227] w-4 h-4"
+                          checked={terminosAceptados}
+                          onChange={(e) => setTerminosAceptados(e.target.checked)}
+                          className="mt-1 accent-[#C9A227] w-4 h-4 shrink-0"
                         />
                         <span className="text-xs text-[#A7A39A]">
                           Acepto los{' '}
-                          <button 
-                            type="button"
-                            onClick={() => setMostrarTerminos(true)}
-                            className="text-[#C9A227] hover:underline font-medium"
-                          >
-                            Términos y Condiciones
-                          </button>
+                          <span className="text-[#F5F1E8] font-medium">Términos y Condiciones</span>
                           {' '}y la{' '}
-                          <button 
-                            type="button"
-                            onClick={() => setMostrarTerminos(true)}
-                            className="text-[#C9A227] hover:underline font-medium"
-                          >
-                            Política de Protección de Datos
-                          </button>
-                          {' '}(Ley 1581 de 2012).
+                          <span className="text-[#F5F1E8] font-medium">Política de Protección de Datos Personales</span>
+                          {' '}de Monarch Barber.
                         </span>
                       </label>
                     </div>
 
                     <button 
                       type="submit" 
-                      disabled={esDiaDelBarberoBloqueado(barberoElegido.nombre, fechaCita)}
+                      disabled={esDiaDelBarberoBloqueado(barberoElegido.nombre, fechaCita) || !terminosAceptados}
                       className={`w-full py-4 uppercase text-xs tracking-[0.25em] font-semibold transition shadow-xl mt-6 ${
-                        esDiaDelBarberoBloqueado(barberoElegido.nombre, fechaCita)
+                        esDiaDelBarberoBloqueado(barberoElegido.nombre, fechaCita) || !terminosAceptados
                           ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
                           : 'bg-[#C9A227] text-black hover:bg-[#E0C36E]'
                       }`}
@@ -1237,7 +1116,7 @@ export default function App() {
               MONARCH<span className="text-[#C9A227]">.</span>
             </div>
             
-            <p className="font-light text-center">© 2026 Monarch Barber. Todos los derechos reservados.</p>
+            <p className="font-light text-center">2026 Monarch Barber. Todos los derechos reservados.</p>
             
             <div className="flex items-center gap-6">
               <a href="#" className="hover:text-[#C9A227] transition"><Instagram size={18} /></a>
@@ -1682,4 +1561,4 @@ export default function App() {
 
     </div>
   );
-} 
+}
