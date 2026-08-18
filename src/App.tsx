@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Calendar as CalendarIcon, User, Scissors, DollarSign, Check, X, Clock, 
   MapPin, Phone, Star, Menu, Shield, Settings, ChevronRight, 
-  Instagram, Facebook, Award, Users, FileText, Lock, Mail, LogOut, UserPlus, Eye, EyeOff, Image, Upload, Trash2, Edit3, Ban, Power, ChevronLeft
+  Instagram, Facebook, Award, Users, FileText, Lock, Mail, LogOut, UserPlus, Eye, EyeOff, Image, Upload, Trash2, Edit3, Ban, Power, ChevronLeft, Trash
 } from 'lucide-react';
 
 // Configuración de API
@@ -12,7 +12,7 @@ type Servicio = { id: number; nombre: string; descripcion: string; precio: numbe
 type BarberoPerfil = { id: number; nombre: string; especialidad: string; experiencia: string; foto: string };
 type Cita = { id: number; usuario: string; telefono: string; barbero: string; servicio: string; fecha: string; hora: string; estado: 'Confirmada' | 'Pendiente' | 'Cancelada' };
 type UsuarioSistema = { id: number; nombre: string; email: string; telefono: string; password?: string; rol: 'admin' | 'barbero'; especialidad?: string; experiencia?: string; foto?: string; activo?: boolean };
-type DiaBloqueado = { barbero: string; fecha: string };
+type DiaBloqueado = { id?: number; barbero: string; fecha: string };
 
 const SERVICIOS_DB: Servicio[] = [
   { id: 1, nombre: "Corte clásico", descripcion: "Corte tradicional a tijera o máquina con acabado de navaja y producto de estilismo.", precio: 25000, duracion: "30 min" },
@@ -459,6 +459,29 @@ export default function App() {
     }
   };
 
+  // Función para desbloquear un día específico por ID
+  const desbloquearDia = async (id: number, barbero: string, fecha: string) => {
+    if (!confirm(`¿Desbloquear el día ${formatearFechaLegible(fecha)} para ${barbero}?`)) return;
+    
+    try {
+      const response = await fetch(`${API_URL}/bloqueos/${id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (response.ok) {
+        setDiasBloqueados(prev => prev.filter(d => d.id !== id));
+        alert(`✅ Día ${formatearFechaLegible(fecha)} desbloqueado para ${barbero}.`);
+      } else {
+        const error = await response.json();
+        alert(`❌ Error al desbloquear: ${error.error || 'Error desconocido'}`);
+      }
+    } catch (err) {
+      console.error("Error al desbloquear día:", err);
+      alert("❌ Hubo un error al procesar la solicitud.");
+    }
+  };
+
   // ✅ FUNCIÓN CORREGIDA - Ahora realiza peticiones HTTP al backend
   const alternarBloqueoDia = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -473,25 +496,15 @@ export default function App() {
       const yaBloqueado = esDiaDelBarberoBloqueado(barberoNombre, fechaBloqueoInput);
       
       if (yaBloqueado) {
-        // Si ya está bloqueado, lo eliminamos (DELETE)
-        const response = await fetch(`${API_URL}/bloqueos`, {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            barbero: barberoNombre, 
-            fecha: fechaBloqueoInput 
-          })
-        });
-
-        if (response.ok) {
-          // Actualizar estado local eliminando el bloqueo
-          setDiasBloqueados(prev => prev.filter(d => 
-            !(d.barbero === barberoNombre && d.fecha === fechaBloqueoInput)
-          ));
-          alert(`✅ Día ${formatearFechaLegible(fechaBloqueoInput)} habilitado nuevamente para ${barberoNombre}.`);
+        // Buscar el ID del bloqueo existente
+        const bloqueoExistente = diasBloqueados.find(
+          d => d.barbero === barberoNombre && d.fecha === fechaBloqueoInput
+        );
+        
+        if (bloqueoExistente?.id) {
+          await desbloquearDia(bloqueoExistente.id, barberoNombre, fechaBloqueoInput);
         } else {
-          const error = await response.json();
-          alert(`❌ Error al desbloquear: ${error.error || 'Error desconocido'}`);
+          alert('No se encontró el bloqueo para eliminar.');
         }
       } else {
         // Si no está bloqueado, lo creamos (POST)
@@ -505,12 +518,9 @@ export default function App() {
         });
 
         if (response.ok) {
-          // Actualizar estado local agregando el bloqueo
-          setDiasBloqueados(prev => [...prev, { 
-            barbero: barberoNombre, 
-            fecha: fechaBloqueoInput 
-          }]);
-          alert(`✅ Día ${formatearFechaLegible(fechaBloqueoInput)} marcado como no disponible para ${barberoNombre}.`);
+          const nuevoBloqueo = await response.json();
+          setDiasBloqueados(prev => [...prev, nuevoBloqueo]);
+          alert(`✅ Día ${formatearFechaLegible(fechaBloqueoInput)} bloqueado para ${barberoNombre}.`);
         } else {
           const error = await response.json();
           alert(`❌ Error al bloquear: ${error.error || 'Error desconocido'}`);
@@ -1101,7 +1111,7 @@ export default function App() {
                                   onClick={() => setFechaCita(item.fechaIso)}
                                   className={`py-2 text-xs transition font-medium ${
                                     esPasado || estaBloqueadoDia
-                                      ? 'text-[#444] bg-[#111111]/30 cursor-not-allowed line-through'
+                                      ? 'bg-[#1A1A1A]/50 text-[#444] cursor-not-allowed opacity-40'
                                       : esSeleccionado
                                         ? 'bg-[#C9A227] text-black font-bold shadow-md'
                                         : 'bg-[#111111] text-[#A7A39A] hover:border-[#C9A227]/50 border border-[#2A2A2A]'
@@ -1362,8 +1372,17 @@ export default function App() {
                   {diasBloqueados
                     .filter(d => usuarioLogueado.rol === 'admin' || d.barbero === usuarioLogueado.nombre)
                     .map((d, idx) => (
-                      <span key={idx} className="bg-red-950/80 border border-red-800 text-red-300 text-[10px] px-2.5 py-1">
+                      <span key={idx} className="bg-red-950/80 border border-red-800 text-red-300 text-[10px] px-2.5 py-1 flex items-center gap-2">
                         {d.barbero}: {formatearFechaLegible(d.fecha)}
+                        {usuarioLogueado.rol === 'admin' && d.id && (
+                          <button 
+                            onClick={() => desbloquearDia(d.id!, d.barbero, d.fecha)}
+                            className="text-red-300 hover:text-red-100 transition ml-1"
+                            title="Desbloquear este día"
+                          >
+                            <Trash size={12} />
+                          </button>
+                        )}
                       </span>
                     ))}
                 </div>
