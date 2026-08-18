@@ -545,6 +545,7 @@ export default function App() {
     }
   };
 
+  // ✅ CORREGIDO: APT_URI → API_URL
   const actualizarEstadoCita = async (id: number, nuevoEstado: 'Confirmada' | 'Pendiente' | 'Cancelada') => {
     try {
       await fetch(`${API_URL}/citas/${id}`, {
@@ -1620,4 +1621,4 @@ export default function App() {
 
     </div>
   );
-}  
+}
