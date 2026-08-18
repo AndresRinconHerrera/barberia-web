@@ -42,6 +42,7 @@ export default function App() {
   const [diasBloqueados, setDiasBloqueados] = useState<DiaBloqueado[]>([]);
   const [fechaBloqueoInput, setFechaBloqueoInput] = useState('');
   const [barberoSeleccionadoBloqueo, setBarberoSeleccionadoBloqueo] = useState('');
+  const [cargandoBloqueo, setCargandoBloqueo] = useState(false);
 
   const [horariosPersonalizados, setHorariosPersonalizados] = useState<Record<string, string[]>>({});
   const [horaNumericaInput, setHoraNumericaInput] = useState('');
@@ -96,6 +97,7 @@ export default function App() {
     setConsentimientoAceptado(true);
   };
 
+  // Cargar barberos
   useEffect(() => {
     fetch(`${API_URL}/barberos`)
       .then(res => res.json())
@@ -112,6 +114,24 @@ export default function App() {
         }
       })
       .catch(err => console.error("Error al cargar barberos:", err));
+  }, []);
+
+  // Cargar bloqueos existentes del backend
+  useEffect(() => {
+    fetch(`${API_URL}/bloqueos`)
+      .then(res => res.json())
+      .then(data => {
+        setDiasBloqueados(data);
+      })
+      .catch(err => console.error("Error al cargar bloqueos:", err));
+  }, []);
+
+  // Cargar citas
+  useEffect(() => {
+    fetch(`${API_URL}/citas`)
+      .then(res => res.json())
+      .then(data => setCitas(data))
+      .catch(err => console.error("Error al cargar citas:", err));
   }, []);
 
   useEffect(() => {
@@ -149,13 +169,6 @@ export default function App() {
     if (hora24 === horaActual && minuto < minutosActual) return true;
     return false;
   };
-
-  useEffect(() => {
-    fetch(`${API_URL}/citas`)
-      .then(res => res.json())
-      .then(data => setCitas(data))
-      .catch(err => console.error("Error al cargar citas:", err));
-  }, []);
 
   const barberoActualNombre = usuarioLogueado?.rol === 'barbero' ? usuarioLogueado.nombre : barberoElegido.nombre;
   const horasPermitidasParaBarbero = horariosPersonalizados[barberoActualNombre] || HORAS_DISPONIBLES_DEFAULT;
@@ -446,22 +459,71 @@ export default function App() {
     }
   };
 
-  const alternarBloqueoDia = (e: React.FormEvent) => {
+  // ✅ FUNCIÓN CORREGIDA - Ahora realiza peticiones HTTP al backend
+  const alternarBloqueoDia = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fechaBloqueoInput || !usuarioLogueado) return;
     
     const barberoNombre = usuarioLogueado.rol === 'admin' ? barberoSeleccionadoBloqueo : usuarioLogueado.nombre;
     if (!barberoNombre) return;
 
-    const yaBloqueado = esDiaDelBarberoBloqueado(barberoNombre, fechaBloqueoInput);
-    if (yaBloqueado) {
-      setDiasBloqueados(diasBloqueados.filter(d => !(d.barbero === barberoNombre && d.fecha === fechaBloqueoInput)));
-      alert(`Día ${formatearFechaLegible(fechaBloqueoInput)} habilitado nuevamente para ${barberoNombre}.`);
-    } else {
-      setDiasBloqueados([...diasBloqueados, { barbero: barberoNombre, fecha: fechaBloqueoInput }]);
-      alert(`Día ${formatearFechaLegible(fechaBloqueoInput)} marcado como no disponible para ${barberoNombre}.`);
+    setCargandoBloqueo(true);
+
+    try {
+      const yaBloqueado = esDiaDelBarberoBloqueado(barberoNombre, fechaBloqueoInput);
+      
+      if (yaBloqueado) {
+        // Si ya está bloqueado, lo eliminamos (DELETE)
+        const response = await fetch(`${API_URL}/bloqueos`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            barbero: barberoNombre, 
+            fecha: fechaBloqueoInput 
+          })
+        });
+
+        if (response.ok) {
+          // Actualizar estado local eliminando el bloqueo
+          setDiasBloqueados(prev => prev.filter(d => 
+            !(d.barbero === barberoNombre && d.fecha === fechaBloqueoInput)
+          ));
+          alert(`✅ Día ${formatearFechaLegible(fechaBloqueoInput)} habilitado nuevamente para ${barberoNombre}.`);
+        } else {
+          const error = await response.json();
+          alert(`❌ Error al desbloquear: ${error.error || 'Error desconocido'}`);
+        }
+      } else {
+        // Si no está bloqueado, lo creamos (POST)
+        const response = await fetch(`${API_URL}/bloqueos`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            barbero: barberoNombre, 
+            fecha: fechaBloqueoInput 
+          })
+        });
+
+        if (response.ok) {
+          // Actualizar estado local agregando el bloqueo
+          setDiasBloqueados(prev => [...prev, { 
+            barbero: barberoNombre, 
+            fecha: fechaBloqueoInput 
+          }]);
+          alert(`✅ Día ${formatearFechaLegible(fechaBloqueoInput)} marcado como no disponible para ${barberoNombre}.`);
+        } else {
+          const error = await response.json();
+          alert(`❌ Error al bloquear: ${error.error || 'Error desconocido'}`);
+        }
+      }
+      
+      setFechaBloqueoInput('');
+    } catch (err) {
+      console.error("Error al gestionar bloqueo:", err);
+      alert("❌ Hubo un error al procesar la solicitud con el servidor.");
+    } finally {
+      setCargandoBloqueo(false);
     }
-    setFechaBloqueoInput('');
   };
 
   const agregarHorarioBarbero = (e: React.FormEvent) => {
@@ -1064,7 +1126,6 @@ export default function App() {
                             Día bloqueado por el barbero.
                           </div>
                         ) : (
-                          // ✅ BLOQUE DE HORAS CORREGIDO
                           <div className="grid grid-cols-3 gap-2">
                             {horasPermitidasParaBarbero.map((hora) => {
                               const estaOcupada = horasOcupadas.includes(hora);
@@ -1282,8 +1343,16 @@ export default function App() {
                     className="w-full bg-[#111111] border border-[#2A2A2A] p-3 text-xs text-[#F5F1E8] focus:outline-none focus:border-[#C9A227]"
                   />
                 </div>
-                <button type="submit" className="w-full bg-[#C9A227] text-black py-3 uppercase text-[10px] tracking-[0.2em] font-semibold hover:bg-[#E0C36E] transition">
-                  Alternar Estado del Día
+                <button 
+                  type="submit" 
+                  disabled={cargandoBloqueo}
+                  className={`w-full py-3 uppercase text-[10px] tracking-[0.2em] font-semibold transition ${
+                    cargandoBloqueo 
+                      ? 'bg-gray-700 text-gray-400 cursor-not-allowed' 
+                      : 'bg-[#C9A227] text-black hover:bg-[#E0C36E]'
+                  }`}
+                >
+                  {cargandoBloqueo ? 'Procesando...' : 'Alternar Estado del Día'}
                 </button>
               </form>
               
