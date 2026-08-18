@@ -60,8 +60,9 @@ export default function App() {
   const [nuevoBarberoFoto, setNuevoBarberoFoto] = useState('');
   const [nuevoBarberoPass, setNuevoBarberoPass] = useState('');
 
-  // Estado para aceptación de cookies y términos
+  // Estado para consentimiento y modal de términos
   const [consentimientoAceptado, setConsentimientoAceptado] = useState(false);
+  const [mostrarTerminos, setMostrarTerminos] = useState(false);
 
   const barberosActivos = barberosRegistrados.filter(b => b.activo !== false);
 
@@ -588,17 +589,98 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#111111] text-[#F5F1E8] font-sans selection:bg-[#C9A227] selection:text-black">
       
+      {/* Modal de Términos y Condiciones */}
+      {mostrarTerminos && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
+          <div className="bg-[#1A1A1A] border border-[#C9A227]/30 max-w-3xl w-full max-h-[85vh] overflow-y-auto p-8 shadow-2xl">
+            <div className="flex justify-between items-start mb-6">
+              <h2 className="text-2xl font-serif text-[#F5F1E8] tracking-wider">Términos y Condiciones</h2>
+              <button 
+                onClick={() => setMostrarTerminos(false)}
+                className="text-[#A7A39A] hover:text-[#C9A227] transition p-1"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="space-y-6 text-sm text-[#A7A39A] leading-relaxed">
+              <div>
+                <h3 className="text-[#F5F1E8] font-semibold uppercase tracking-wider text-xs mb-2">1. Aceptación de Términos</h3>
+                <p>Al utilizar los servicios de Monarch Barber, aceptas de manera plena y sin reservas los presentes Términos y Condiciones.</p>
+              </div>
+
+              <div>
+                <h3 className="text-[#F5F1E8] font-semibold uppercase tracking-wider text-xs mb-2">2. Protección de Datos Personales</h3>
+                <p className="mb-2">De acuerdo con la <span className="text-[#C9A227]">Ley 1581 de 2012</span> y el Decreto 1377 de 2013, Monarch Barber se compromete a:</p>
+                <ul className="list-disc list-inside space-y-1 pl-4">
+                  <li>Recopilar tus datos personales de manera lícita y transparente.</li>
+                  <li>Utilizar tus datos exclusivamente para la gestión de citas y comunicación relacionada con nuestros servicios.</li>
+                  <li>Garantizar tu derecho a conocer, actualizar, rectificar y eliminar tus datos en cualquier momento.</li>
+                  <li>No compartir tus datos con terceros sin tu consentimiento expreso.</li>
+                  <li>Implementar medidas de seguridad para proteger tu información.</li>
+                </ul>
+                <p className="mt-2 text-[10px] text-[#777]">Para ejercer tus derechos, escribe a: <span className="text-[#C9A227]">datos@monarchbarber.com</span></p>
+              </div>
+
+              <div>
+                <h3 className="text-[#F5F1E8] font-semibold uppercase tracking-wider text-xs mb-2">3. Responsabilidad del Usuario</h3>
+                <p>Eres responsable de proporcionar información veraz, completa y actualizada. La información falsa o inexacta puede resultar en la cancelación de tu cita y la suspensión de tu cuenta.</p>
+              </div>
+
+              <div>
+                <h3 className="text-[#F5F1E8] font-semibold uppercase tracking-wider text-xs mb-2">4. Cancelaciones y Reagendamientos</h3>
+                <ul className="list-disc list-inside space-y-1 pl-4">
+                  <li>Las citas pueden cancelarse sin costo hasta 24 horas antes de la hora programada.</li>
+                  <li>Cancelaciones con menos de 24 horas de anticipación pueden generar un cargo del 50% del valor del servicio.</li>
+                  <li>Las inasistencias sin previo aviso generarán el cargo total del servicio.</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="text-[#F5F1E8] font-semibold uppercase tracking-wider text-xs mb-2">5. Modificaciones</h3>
+                <p>Monarch Barber se reserva el derecho de modificar estos términos en cualquier momento. Las actualizaciones serán publicadas en este sitio web y entrarán en vigor inmediatamente.</p>
+              </div>
+
+              <div>
+                <h3 className="text-[#F5F1E8] font-semibold uppercase tracking-wider text-xs mb-2">6. Contacto</h3>
+                <p>Para consultas sobre estos términos, contáctanos en: <span className="text-[#C9A227]">info@monarchbarber.com</span></p>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-4 mt-8 pt-6 border-t border-[#2A2A2A]">
+              <button 
+                onClick={() => setMostrarTerminos(false)}
+                className="px-6 py-2 border border-[#2A2A2A] text-[#A7A39A] uppercase text-[10px] tracking-[0.2em] font-medium hover:border-[#C9A227] transition"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Banner de consentimiento unificado (cookies + términos) */}
       {!consentimientoAceptado && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#1A1A1A] border-t border-[#C9A227]/30 p-6 shadow-2xl backdrop-blur-sm">
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#1A1A1A] border-t border-[#C9A227]/30 p-6 shadow-2xl backdrop-blur-sm">
           <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="text-center md:text-left">
               <p className="text-xs text-[#A7A39A] leading-relaxed max-w-2xl">
-                <span className="text-[#C9A227] font-medium tracking-wider">Monarch Barber</span> utiliza cookies para optimizar tu experiencia en nuestro sitio web. 
-                Al continuar, aceptas nuestra{' '}
-                <span className="text-[#F5F1E8] font-medium">Política de Privacidad</span> y 
-                {' '}<span className="text-[#F5F1E8] font-medium">Términos de Servicio</span>, 
-                conforme a la Ley 1581 de 2012 sobre protección de datos personales.
+                <span className="text-[#C9A227] font-medium tracking-wider">Monarch Barber</span> utiliza cookies para optimizar tu experiencia. 
+                Al continuar, aceptas nuestras{' '}
+                <button 
+                  onClick={() => setMostrarTerminos(true)}
+                  className="text-[#F5F1E8] hover:text-[#C9A227] transition font-medium underline-offset-2 hover:underline"
+                >
+                  Políticas de Privacidad
+                </button>
+                {' '}y{' '}
+                <button 
+                  onClick={() => setMostrarTerminos(true)}
+                  className="text-[#F5F1E8] hover:text-[#C9A227] transition font-medium underline-offset-2 hover:underline"
+                >
+                  Términos de Servicio
+                </button>
+                , conforme a la Ley 1581 de 2012.
               </p>
             </div>
             <button 
@@ -611,7 +693,7 @@ export default function App() {
         </div>
       )}
 
-      <nav className="fixed top-0 w-full bg-[#111111]/95 backdrop-blur-md border-b border-[#C9A227]/20 px-6 md:px-16 py-5 flex justify-between items-center z-40 shadow-2xl">
+      <nav className="fixed top-0 w-full bg-[#111111]/95 backdrop-blur-md border-b border-[#C9A227]/20 px-6 md:px-16 py-5 flex justify-between items-center z-30 shadow-2xl">
         <div className="text-xl md:text-2xl font-bold tracking-[0.3em] text-[#F5F1E8] cursor-pointer font-serif" onClick={() => { setVista('cliente'); setReservaConfirmada(null); }}>
           MONARCH<span className="text-[#C9A227]">.</span>
         </div>
@@ -647,7 +729,7 @@ export default function App() {
       </nav>
 
       {menuAbierto && (
-        <div className="fixed inset-x-0 top-[73px] bg-[#1A1A1A] border-b border-[#C9A227]/20 p-6 flex flex-col gap-4 z-40 lg:hidden shadow-2xl">
+        <div className="fixed inset-x-0 top-[73px] bg-[#1A1A1A] border-b border-[#C9A227]/20 p-6 flex flex-col gap-4 z-30 lg:hidden shadow-2xl">
           <a href="#inicio" onClick={() => setMenuAbierto(false)} className="text-sm uppercase tracking-widest text-[#A7A39A] hover:text-[#C9A227]">Inicio</a>
           <a href="#servicios" onClick={() => setMenuAbierto(false)} className="text-sm uppercase tracking-widest text-[#A7A39A] hover:text-[#C9A227]">Servicios</a>
           <a href="#barberos" onClick={() => setMenuAbierto(false)} className="text-sm uppercase tracking-widest text-[#A7A39A] hover:text-[#C9A227]">Barberos</a>
@@ -1063,7 +1145,22 @@ export default function App() {
 
                     {!consentimientoAceptado && (
                       <p className="text-[10px] text-[#A7A39A] text-center mt-2">
-                        Para reservar, debes aceptar las políticas de privacidad y el uso de cookies.
+                        Para reservar, debes aceptar las{' '}
+                        <button 
+                          type="button"
+                          onClick={() => setMostrarTerminos(true)}
+                          className="text-[#C9A227] hover:underline font-medium"
+                        >
+                          Políticas de Privacidad
+                        </button>
+                        {' '}y{' '}
+                        <button 
+                          type="button"
+                          onClick={() => setMostrarTerminos(true)}
+                          className="text-[#C9A227] hover:underline font-medium"
+                        >
+                          Términos de Servicio
+                        </button>.
                       </p>
                     )}
                   </form>
