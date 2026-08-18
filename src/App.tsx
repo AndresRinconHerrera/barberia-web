@@ -60,7 +60,6 @@ export default function App() {
   const [nuevoBarberoFoto, setNuevoBarberoFoto] = useState('');
   const [nuevoBarberoPass, setNuevoBarberoPass] = useState('');
 
-  // Estado para consentimiento y modal de términos
   const [consentimientoAceptado, setConsentimientoAceptado] = useState(false);
   const [mostrarTerminos, setMostrarTerminos] = useState(false);
 
@@ -85,7 +84,6 @@ export default function App() {
 
   const [fechaActualCalendario, setFechaActualCalendario] = useState(new Date());
 
-  // Verificar consentimiento al cargar
   useEffect(() => {
     const consentimiento = localStorage.getItem('consentimientoAceptado');
     if (consentimiento === 'true') {
@@ -93,7 +91,6 @@ export default function App() {
     }
   }, []);
 
-  // Función para aceptar todo (cookies + términos)
   const aceptarConsentimiento = () => {
     localStorage.setItem('consentimientoAceptado', 'true');
     setConsentimientoAceptado(true);
@@ -625,25 +622,6 @@ export default function App() {
               <div>
                 <h3 className="text-[#F5F1E8] font-semibold uppercase tracking-wider text-xs mb-2">3. Responsabilidad del Usuario</h3>
                 <p>Eres responsable de proporcionar información veraz, completa y actualizada. La información falsa o inexacta puede resultar en la cancelación de tu cita y la suspensión de tu cuenta.</p>
-              </div>
-
-              <div>
-                <h3 className="text-[#F5F1E8] font-semibold uppercase tracking-wider text-xs mb-2">4. Cancelaciones y Reagendamientos</h3>
-                <ul className="list-disc list-inside space-y-1 pl-4">
-                  <li>Las citas pueden cancelarse sin costo hasta 24 horas antes de la hora programada.</li>
-                  <li>Cancelaciones con menos de 24 horas de anticipación pueden generar un cargo del 50% del valor del servicio.</li>
-                  <li>Las inasistencias sin previo aviso generarán el cargo total del servicio.</li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="text-[#F5F1E8] font-semibold uppercase tracking-wider text-xs mb-2">5. Modificaciones</h3>
-                <p>Monarch Barber se reserva el derecho de modificar estos términos en cualquier momento. Las actualizaciones serán publicadas en este sitio web y entrarán en vigor inmediatamente.</p>
-              </div>
-
-              <div>
-                <h3 className="text-[#F5F1E8] font-semibold uppercase tracking-wider text-xs mb-2">6. Contacto</h3>
-                <p>Para consultas sobre estos términos, contáctanos en: <span className="text-[#C9A227]">info@monarchbarber.com</span></p>
               </div>
             </div>
 
