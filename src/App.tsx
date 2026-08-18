@@ -131,6 +131,25 @@ export default function App() {
     return `${dia} de ${nombreMes} de ${anio}`;
   };
 
+  // ✅ Función para verificar si una hora ya pasó hoy
+  const esHoraPasada = (horaStr: string, fechaStr: string) => {
+    const hoy = new Date().toISOString().split('T')[0];
+    if (fechaStr !== hoy) return false;
+    
+    const ahora = new Date();
+    const horaActual = ahora.getHours();
+    const minutosActual = ahora.getMinutes();
+    
+    const [hora, minuto] = horaStr.replace(' AM', '').replace(' PM', '').split(':').map(Number);
+    let hora24 = hora;
+    if (horaStr.includes('PM') && hora !== 12) hora24 = hora + 12;
+    if (horaStr.includes('AM') && hora === 12) hora24 = 0;
+    
+    if (hora24 < horaActual) return true;
+    if (hora24 === horaActual && minuto < minutosActual) return true;
+    return false;
+  };
+
   useEffect(() => {
     fetch(`${API_URL}/citas`)
       .then(res => res.json())
@@ -145,6 +164,7 @@ export default function App() {
     return diasBloqueados.some(d => d.barbero === nombreBarb && d.fecha === fecha);
   };
 
+  // ✅ CORREGIDO: Consultar horas ocupadas con filtro de horas pasadas
   useEffect(() => {
     if (!fechaCita || !barberoElegido) {
       setHorasOcupadas([]);
@@ -154,10 +174,10 @@ export default function App() {
       .then(res => res.json())
       .then(data => {
         setHorasOcupadas(data);
-        if (data.includes(horaCita) || !horasPermitidasParaBarbero.includes(horaCita)) {
-          const primeraLibre = horasPermitidasParaBarbero.find(h => !data.includes(h));
-          if (primeraLibre) setHoraCita(primeraLibre);
-        }
+        const primeraLibre = horasPermitidasParaBarbero.find(h => 
+          !data.includes(h) && !esHoraPasada(h, fechaCita)
+        );
+        if (primeraLibre) setHoraCita(primeraLibre);
       })
       .catch(err => console.error("Error al consultar horas ocupadas:", err));
   }, [barberoElegido, fechaCita, horariosPersonalizados]);
@@ -545,7 +565,6 @@ export default function App() {
     }
   };
 
-  // ✅ CORREGIDO: APT_URI → API_URL
   const actualizarEstadoCita = async (id: number, nuevoEstado: 'Confirmada' | 'Pendiente' | 'Cancelada') => {
     try {
       await fetch(`${API_URL}/citas/${id}`, {
@@ -1045,24 +1064,28 @@ export default function App() {
                             Día bloqueado por el barbero.
                           </div>
                         ) : (
+                          // ✅ BLOQUE DE HORAS CORREGIDO
                           <div className="grid grid-cols-3 gap-2">
                             {horasPermitidasParaBarbero.map((hora) => {
                               const estaOcupada = horasOcupadas.includes(hora);
+                              const estaPasada = esHoraPasada(hora, fechaCita);
+                              const estaDeshabilitada = estaOcupada || estaPasada;
+                              
                               return (
                                 <button
                                   key={hora}
                                   type="button"
-                                  disabled={estaOcupada}
+                                  disabled={estaDeshabilitada}
                                   onClick={() => setHoraCita(hora)}
                                   className={`py-3 text-xs border tracking-wider transition ${
-                                    estaOcupada 
+                                    estaDeshabilitada 
                                       ? 'border-[#2A2A2A] bg-[#151515] text-[#555] cursor-not-allowed line-through' 
                                       : horaCita === hora 
                                         ? 'border-[#C9A227] bg-[#C9A227] text-black font-bold' 
                                         : 'border-[#2A2A2A] bg-[#1A1A1A] text-[#A7A39A] hover:border-[#C9A227]/50'
                                   }`}
                                 >
-                                  {hora} {estaOcupada && '(Ocupada)'}
+                                  {hora} {estaOcupada && '(Ocupada)'} {estaPasada && '(Pasada)'}
                                 </button>
                               );
                             })}
